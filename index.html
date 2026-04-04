@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Blackjack Control System</title>
+<title>BJBUGNIL PRO</title>
 <style>
 body { font-family: Arial; background:#0b3d2e; color:white; text-align:center;}
 button { margin:3px; padding:8px; border-radius:6px; border:none; cursor:pointer;}
@@ -14,24 +14,29 @@ button { margin:3px; padding:8px; border-radius:6px; border:none; cursor:pointer
 .money { color:#ffd700; font-size:18px;}
 .overlay {
   position:fixed; top:0; left:0; width:100%; height:100%;
-  background:black; color:white; display:none;
-  justify-content:center; align-items:center;
-  font-size:30px; z-index:999;
+  background:black; color:white;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  font-size:28px;
+  z-index:9999;
 }
 </style>
 </head>
 <body>
 
 <div class="overlay" id="overlay">
-  🛑 ถึงเป้ากำไรแล้ว ออกจากโต๊ะเดี๋ยวนี้!
+  🎯 ถึงเป้ากำไรแล้ว!<br>
+  ❌ หยุดเล่นทันที / เปลี่ยนโต๊ะ
 </div>
 
-<h2>🃏 Blackjack Control System</h2>
+<h2>🔥 BJBUGNIL PRO 🔥</h2>
 
 <div class="box">
-<h3>ตั้งค่าเงิน</h3>
 ทุน: <input type="number" id="startMoney" value="1000">
-%กำไร/รอบ: <input type="number" id="profitPercent" value="10">
+ชิพ: <input type="number" id="chip" value="50">
+กำไร%: <input type="number" id="profitPercent" value="10">
 <button onclick="setMoney()">เริ่ม</button>
 </div>
 
@@ -48,7 +53,7 @@ button { margin:3px; padding:8px; border-radius:6px; border:none; cursor:pointer
 </div>
 
 <div class="box">
-<h3>➕ Hit (ใบ 3-5)</h3>
+<h3>➕ Hit</h3>
 <div id="hitBtns"></div>
 </div>
 
@@ -69,6 +74,9 @@ let dealer=null;
 let player=[];
 let money=0;
 let target=0;
+let chip=50;
+let baseChip=50;
+let winStreak=0;
 let locked=false;
 
 // สร้างปุ่ม
@@ -87,12 +95,15 @@ create("dealerBtns","dealer");
 create("playerBtns","player");
 create("hitBtns","hit");
 
-// ตั้งเงิน
+// ตั้งค่าเงิน
 function setMoney(){
-  let start=parseFloat(document.getElementById("startMoney").value);
+  money=parseFloat(document.getElementById("startMoney").value);
+  chip=parseFloat(document.getElementById("chip").value);
+  baseChip=chip;
+
   let percent=parseFloat(document.getElementById("profitPercent").value);
-  money=start;
-  target=start + (start*percent/100);
+  target=money + (money*percent/100);
+
   updateMoney();
 }
 
@@ -153,28 +164,42 @@ function update(){
 // เงิน
 function updateMoney(){
   document.getElementById("moneyShow").innerText =
-    `เงิน: ${money} / เป้า: ${target}`;
+    `เงิน: ${money} | เป้า: ${target} | ชิพ: ${chip}`;
 }
 
-// Win/Lose
+// 🎯 ชนะ
 function win(){
   if(locked) return;
-  money += 50;
+
+  money += chip;
+  winStreak++;
+
+  // 🔥 ชนะ 2 ไม้ติด → เพิ่มชิพ
+  if(winStreak >= 2){
+    chip += baseChip;
+  }
+
   checkTarget();
   updateMoney();
 }
 
+// ❌ แพ้
 function lose(){
   if(locked) return;
-  money -= 50;
+
+  money -= chip;
+  winStreak=0;
+  chip = baseChip; // รีเซ็ต
+
   updateMoney();
 }
 
-// เช็คเป้า
+// 🚨 เช็คเป้า (แก้แล้ว ใช้ได้จริง)
 function checkTarget(){
   if(money >= target){
-    document.getElementById("overlay").style.display="flex";
     locked=true;
+    document.getElementById("overlay").style.display="flex";
+    document.body.style.pointerEvents="none";
   }
 }
 
