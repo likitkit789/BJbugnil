@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Blackjack Real Mode</title>
+<style>
+body { font-family: Arial; background:#0b3d2e; color:white; text-align:center;}
+button { margin:4px; padding:10px; border-radius:8px; border:none; cursor:pointer;}
+.card { background:white; color:black;}
+.action { background:gold;}
+.reset { background:red; color:white;}
+.box { margin:10px;}
+.result { font-size:20px; margin-top:10px; color:#00ffcc;}
+.count { font-size:18px; color:#ffd700;}
+</style>
+</head>
+<body>
+
+<h1>🃏 Blackjack Real Mode + Counting</h1>
+
+<div class="box">
+<h3>ไพ่คุณ</h3>
+<div id="player"></div>
+</div>
+
+<div class="box">
+<h3>Dealer</h3>
+<div id="dealer"></div>
+</div>
+
+<div class="result" id="result">-</div>
+
+<div class="count" id="count">Running: 0 | True: 0 | Bet: 1x</div>
+
+<h3>➕ เพิ่มไพ่</h3>
+<div id="cards"></div>
+
+<h3>🎮 Action</h3>
+<button class="action" onclick="hit()">Hit</button>
+<button class="action" onclick="stand()">Stand</button>
+<button class="action" onclick="doubleDown()">Double</button>
+<button class="action" onclick="split()">Split</button>
+
+<br><br>
+<button class="reset" onclick="resetRound()">จบรอบ</button>
+
+<script>
+const cards = ["A",2,3,4,5,6,7,8,9,10];
+let player = [];
+let dealer = [];
+let runningCount = 0;
+let decks = 6;
+
+// 🎯 Hi-Lo counting
+function updateCount(card){
+  if(card >=2 && card <=6) runningCount++;
+  else if(card === 10 || card === "A") runningCount--;
+}
+
+// 🎯 True Count
+function getTrueCount(){
+  let remaining = decks - ( (player.length + dealer.length) / 52 );
+  return (runningCount / remaining).toFixed(2);
+}
+
+// 🎯 Bet suggestion
+function getBet(){
+  let tc = getTrueCount();
+  if(tc >= 4) return "5x";
+  if(tc >= 2) return "3x";
+  if(tc >= 1) return "2x";
+  return "1x";
+}
+
+// สร้างปุ่มไพ่
+function createCardButtons(){
+  const el = document.getElementById("cards");
+  cards.forEach(c=>{
+    let b=document.createElement("button");
+    b.innerText=c;
+    b.className="card";
+    b.onclick=()=>{
+      if(player.length < 2){
+        player.push(c);
+      }else{
+        player.push(c); // hit
+      }
+      updateCount(c);
+      update();
+    };
+    el.appendChild(b);
+  });
+}
+createCardButtons();
+
+// Dealer รับไพ่
+function addDealer(card){
+  dealer.push(card);
+  updateCount(card);
+  update();
+}
+
+// 🎯 Strategy (ใช้ตัวที่แก้แล้ว)
+function getAdvice(){
+  if(player.length < 2 || dealer.length === 0) return "-";
+
+  let total = getValue(player);
+  let d = dealer[0];
+
+  if(total >= 17) return "STAND";
+  if(total <= 11) return "HIT";
+
+  if(total >= 12 && total <= 16){
+    return (d <= 6) ? "STAND":"HIT";
+  }
+
+  return "HIT";
+}
+
+// คำนวณแต้ม
+function getValue(hand){
+  let total=0, aces=0;
+
+  hand.forEach(c=>{
+    if(c==="A"){ aces++; total+=11; }
+    else total+=c;
+  });
+
+  while(total>21 && aces>0){
+    total-=10; aces--;
+  }
+
+  return total;
+}
+
+// 🎮 Actions
+function hit(){}
+
+function stand(){ alert("Stand"); }
+
+function doubleDown(){
+  if(player.length === 2){
+    alert("Double!");
+  } else {
+    alert("Double ได้แค่ 2 ใบแรก");
+  }
+}
+
+function split(){
+  if(player.length === 2 && player[0] === player[1]){
+    alert("Split!");
+  } else {
+    alert("Split ไม่ได้");
+  }
+}
+
+// อัปเดต
+function update(){
+  let total = getValue(player);
+  let advice = getAdvice();
+
+  document.getElementById("result").innerText =
+    `แต้ม: ${total} | แนะนำ: ${advice}`;
+
+  document.getElementById("count").innerText =
+    `Running: ${runningCount} | True: ${getTrueCount()} | Bet: ${getBet()}`;
+}
+
+// รีเซ็ตรอบ (แต่ count ไม่รีเซ็ต)
+function resetRound(){
+  player=[];
+  dealer=[];
+  document.getElementById("result").innerText="-";
+}
+</script>
+
+</body>
+</html>
