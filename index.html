@@ -2,122 +2,98 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Blackjack Real Mode</title>
+<title>Blackjack Full System</title>
 <style>
 body { font-family: Arial; background:#0b3d2e; color:white; text-align:center;}
-button { margin:4px; padding:10px; border-radius:8px; border:none; cursor:pointer;}
+button { margin:3px; padding:8px; border-radius:6px; border:none; cursor:pointer;}
 .card { background:white; color:black;}
 .action { background:gold;}
 .reset { background:red; color:white;}
 .box { margin:10px;}
-.result { font-size:20px; margin-top:10px; color:#00ffcc;}
-.count { font-size:18px; color:#ffd700;}
+.result { font-size:20px; color:#00ffcc;}
+.money { color:#ffd700; font-size:18px;}
 </style>
 </head>
 <body>
 
-<h1>🃏 Blackjack Real Mode + Counting</h1>
+<h2>🃏 Blackjack Pro System</h2>
 
 <div class="box">
-<h3>ไพ่คุณ</h3>
-<div id="player"></div>
-</div>
-
-<div class="box">
-<h3>Dealer</h3>
+<h3>Dealer ใบแรก</h3>
 <div id="dealer"></div>
 </div>
 
-<div class="result" id="result">-</div>
+<div class="box">
+<h3>ผู้เล่น (2 ใบแรก)</h3>
+<div id="player2"></div>
+</div>
 
-<div class="count" id="count">Running: 0 | True: 0 | Bet: 1x</div>
+<div class="box">
+<h3>➕ จั่วเพิ่ม (ใบ 3-5)</h3>
+<div id="hitcards"></div>
+</div>
 
-<h3>➕ เพิ่มไพ่</h3>
-<div id="cards"></div>
+<div class="result" id="result">คำแนะนำ: -</div>
 
-<h3>🎮 Action</h3>
-<button class="action" onclick="hit()">Hit</button>
-<button class="action" onclick="stand()">Stand</button>
-<button class="action" onclick="doubleDown()">Double</button>
-<button class="action" onclick="split()">Split</button>
+<div class="money" id="count">Count: 0 | Bet: 1x | เงิน: 1000</div>
+
+<h3>🎮 ผลลัพธ์</h3>
+<button class="action" onclick="win()">Win</button>
+<button class="action" onclick="lose()">Lose</button>
 
 <br><br>
-<button class="reset" onclick="resetRound()">จบรอบ</button>
+<button class="reset" onclick="resetRound()">รีเซ็ตรอบ</button>
+<button class="reset" onclick="resetMoney()">รีเซ็ตเงิน</button>
 
 <script>
 const cards = ["A",2,3,4,5,6,7,8,9,10];
-let player = [];
-let dealer = [];
-let runningCount = 0;
-let decks = 6;
 
-// 🎯 Hi-Lo counting
-function updateCount(card){
-  if(card >=2 && card <=6) runningCount++;
-  else if(card === 10 || card === "A") runningCount--;
-}
+let dealer=null;
+let player=[];
+let runningCount=0;
+let money=1000;
+let betUnit=10;
 
-// 🎯 True Count
-function getTrueCount(){
-  let remaining = decks - ( (player.length + dealer.length) / 52 );
-  return (runningCount / remaining).toFixed(2);
-}
-
-// 🎯 Bet suggestion
-function getBet(){
-  let tc = getTrueCount();
-  if(tc >= 4) return "5x";
-  if(tc >= 2) return "3x";
-  if(tc >= 1) return "2x";
-  return "1x";
-}
-
-// สร้างปุ่มไพ่
-function createCardButtons(){
-  const el = document.getElementById("cards");
+// 🎯 สร้างปุ่ม
+function createButtons(id, type){
+  const el=document.getElementById(id);
   cards.forEach(c=>{
     let b=document.createElement("button");
     b.innerText=c;
     b.className="card";
-    b.onclick=()=>{
-      if(player.length < 2){
-        player.push(c);
-      }else{
-        player.push(c); // hit
-      }
-      updateCount(c);
-      update();
-    };
+    b.onclick=()=>selectCard(c,type);
     el.appendChild(b);
   });
 }
-createCardButtons();
 
-// Dealer รับไพ่
-function addDealer(card){
-  dealer.push(card);
+createButtons("dealer","dealer");
+createButtons("player2","player");
+createButtons("hitcards","hit");
+
+// 🎯 เลือกไพ่
+function selectCard(card,type){
   updateCount(card);
+
+  if(type==="dealer"){
+    dealer=card;
+  }
+  else if(type==="player"){
+    if(player.length<2) player.push(card);
+  }
+  else{
+    player.push(card);
+  }
+
   update();
 }
 
-// 🎯 Strategy (ใช้ตัวที่แก้แล้ว)
-function getAdvice(){
-  if(player.length < 2 || dealer.length === 0) return "-";
-
-  let total = getValue(player);
-  let d = dealer[0];
-
-  if(total >= 17) return "STAND";
-  if(total <= 11) return "HIT";
-
-  if(total >= 12 && total <= 16){
-    return (d <= 6) ? "STAND":"HIT";
-  }
-
-  return "HIT";
+// 🎯 นับไพ่
+function updateCount(card){
+  if(card>=2 && card<=6) runningCount++;
+  else if(card===10 || card==="A") runningCount--;
 }
 
-// คำนวณแต้ม
+// 🎯 คำนวณแต้ม
 function getValue(hand){
   let total=0, aces=0;
 
@@ -133,44 +109,106 @@ function getValue(hand){
   return total;
 }
 
-// 🎮 Actions
-function hit(){}
-
-function stand(){ alert("Stand"); }
-
-function doubleDown(){
-  if(player.length === 2){
-    alert("Double!");
-  } else {
-    alert("Double ได้แค่ 2 ใบแรก");
-  }
+// 🎯 ตรวจ soft
+function isSoft(hand){
+  return hand.includes("A") && getValue(hand)<=21;
 }
 
-function split(){
-  if(player.length === 2 && player[0] === player[1]){
-    alert("Split!");
-  } else {
-    alert("Split ไม่ได้");
+// 🎯 Strategy (ครบ + ใช้ต่อเนื่องได้)
+function getAdvice(){
+  if(player.length<2 || dealer===null) return "-";
+
+  let total=getValue(player);
+  let d=dealer;
+  let p1=player[0];
+  let p2=player[1];
+
+  // Pair
+  if(player.length===2 && p1===p2){
+    if(p1==="A"||p1===8) return "SPLIT";
+    if(p1===10) return "STAND";
+    if(p1===9) return ([2,3,4,5,6,8,9].includes(d))?"SPLIT":"STAND";
+    if(p1===7) return d<=7?"SPLIT":"HIT";
+    if(p1===6) return d<=6?"SPLIT":"HIT";
+    if(p1===5) return d<=9?"DOUBLE":"HIT";
+    if(p1===4) return ([5,6].includes(d))?"SPLIT":"HIT";
+    if(p1===2||p1===3) return d<=7?"SPLIT":"HIT";
   }
+
+  // Soft
+  if(isSoft(player)){
+    if(total>=19) return "STAND";
+    if(total===18){
+      if(d>=3&&d<=6) return "DOUBLE";
+      if(d<=8) return "STAND";
+      return "HIT";
+    }
+    if(total<=17){
+      if(d>=4&&d<=6) return "DOUBLE";
+      return "HIT";
+    }
+  }
+
+  // Hard (ใช้ต่อเนื่องใบ 3-5)
+  if(total>=17) return "STAND";
+  if(total>=13&&total<=16) return d<=6?"STAND":"HIT";
+  if(total===12) return (d>=4&&d<=6)?"STAND":"HIT";
+
+  if(player.length===2){
+    if(total===11) return "DOUBLE";
+    if(total===10) return d<=9?"DOUBLE":"HIT";
+    if(total===9) return (d>=3&&d<=6)?"DOUBLE":"HIT";
+  }
+
+  return "HIT";
 }
 
-// อัปเดต
+// 🎯 Bet จาก Count
+function getBet(){
+  let tc = runningCount/6;
+  if(tc>=4) return 5;
+  if(tc>=2) return 3;
+  if(tc>=1) return 2;
+  return 1;
+}
+
+// 🎯 อัปเดต
 function update(){
-  let total = getValue(player);
-  let advice = getAdvice();
+  let total=getValue(player);
+  let advice=getAdvice();
+  let bet=getBet();
 
   document.getElementById("result").innerText =
     `แต้ม: ${total} | แนะนำ: ${advice}`;
 
   document.getElementById("count").innerText =
-    `Running: ${runningCount} | True: ${getTrueCount()} | Bet: ${getBet()}`;
+    `Count: ${runningCount} | Bet: ${bet}x | เงิน: ${money}`;
 }
 
-// รีเซ็ตรอบ (แต่ count ไม่รีเซ็ต)
+// 🎯 Win/Lose
+function win(){
+  let bet = getBet()*betUnit;
+  money += bet;
+  update();
+}
+
+function lose(){
+  let bet = getBet()*betUnit;
+  money -= bet;
+  update();
+}
+
+// รีเซ็ต
 function resetRound(){
   player=[];
-  dealer=[];
-  document.getElementById("result").innerText="-";
+  dealer=null;
+  document.getElementById("result").innerText="คำแนะนำ: -";
+}
+
+function resetMoney(){
+  money=1000;
+  runningCount=0;
+  update();
 }
 </script>
 
