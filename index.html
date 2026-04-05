@@ -2,260 +2,254 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BJBUGNIL PRO</title>
+
 <style>
-body { font-family: Arial; background:#0b3d2e; color:white; text-align:center;}
-button { margin:3px; padding:8px; border-radius:6px; border:none; cursor:pointer;}
+body {
+  margin:0;
+  font-family: Arial;
+  background:#0b3d2e;
+  color:white;
+  text-align:center;
+}
+
+/* 📱 Layout */
+.container {
+  padding:10px;
+}
+
+/* 🎯 Input bar */
+.topbar {
+  display:flex;
+  gap:5px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+.topbar input {
+  width:70px;
+  padding:6px;
+  border-radius:6px;
+  border:none;
+  text-align:center;
+}
+
+/* 🔘 Buttons grid */
+.grid {
+  display:grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap:6px;
+  padding:10px;
+}
+button {
+  padding:12px;
+  font-size:16px;
+  border-radius:8px;
+  border:none;
+}
 .card { background:white; color:black;}
 .action { background:gold;}
 .reset { background:red; color:white;}
-.box { margin:10px;}
-.result { font-size:20px; color:#00ffcc;}
-.money { color:#ffd700; font-size:18px;}
+
+/* 📊 Info */
+.result { font-size:18px; color:#00ffcc; margin-top:8px;}
+.money { font-size:16px; color:#ffd700;}
+.count { font-size:14px; color:#ccc;}
+
+/* 🚨 Overlay */
 .overlay {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  background:black; color:white;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:black;
+  color:white;
   display:none;
   justify-content:center;
   align-items:center;
   text-align:center;
-  font-size:28px;
+  font-size:24px;
   z-index:9999;
 }
 </style>
 </head>
+
 <body>
 
 <div class="overlay" id="overlay"></div>
 
-<h2>🔥 BJBUGNIL PRO 🔥</h2>
+<div class="container">
 
-<div class="box">
-ทุน: <input type="number" id="startMoney" value="1000">
-ชิพ: <input type="number" id="chipInput" value="50">
-กำไร%: <input type="number" id="profitPercent" value="10">
-<button onclick="setMoney()">เริ่ม</button>
+<h3>🔥 BJBUGNIL PRO 🔥</h3>
+
+<div class="topbar">
+  <input id="startMoney" value="1000">
+  <input id="chipInput" value="50">
+  <input id="profitPercent" value="10">
+  <button onclick="setMoney()">เริ่ม</button>
 </div>
 
-<div class="box">
-<h3>Dealer ใบแรก</h3>
-<div id="dealerBtns"></div>
-<div>เลือก: <span id="dealerShow">-</span></div>
-</div>
+<div>Dealer: <span id="dealerShow">-</span></div>
+<div>Player: <span id="playerShow">-</span></div>
 
-<div class="box">
-<h3>Player (2 ใบแรก + ใบถัดไป)</h3>
-<div id="playerBtns"></div>
-<div>ไพ่: <span id="playerShow">-</span></div>
-</div>
+<div class="grid" id="cards"></div>
 
-<div class="result" id="result">คำแนะนำ: -</div>
+<div class="result" id="result">-</div>
 <div class="money" id="moneyShow">เงิน: 0</div>
+<div class="count" id="countShow">RC:0 | TC:0 | EV:0</div>
 
-<h3>🎮 ผลลัพธ์</h3>
 <button class="action" onclick="win()">Win</button>
 <button class="action" onclick="lose()">Lose</button>
+<button class="reset" onclick="resetRound()">Reset</button>
 
-<br><br>
-<button class="reset" onclick="resetRound()">รีเซ็ตรอบ</button>
+</div>
 
 <script>
 const cards=["A",2,3,4,5,6,7,8,9,10];
 
 let dealer=null;
 let player=[];
-let money=0;
-let target=0;
-let chip=50;
-let baseChip=50;
+let money=0,target=0;
+let chip=50,baseChip=50;
+let runningCount=0,decks=2;
 let winStreak=0;
 let locked=false;
 
-// 🎯 สร้างปุ่ม
-function create(id,type){
-  let el=document.getElementById(id);
-  cards.forEach(c=>{
-    let b=document.createElement("button");
-    b.innerText=c;
-    b.className="card";
-    b.onclick=()=>select(c,type);
-    el.appendChild(b);
-  });
-}
+/* 🔘 Create buttons */
+const el=document.getElementById("cards");
+cards.forEach(c=>{
+  let b=document.createElement("button");
+  b.innerText=c;
+  b.className="card";
+  b.onclick=()=>select(c);
+  el.appendChild(b);
+});
 
-create("dealerBtns","dealer");
-create("playerBtns","player");
-
-// 🎯 ตั้งเงิน
+/* 💰 Setup */
 function setMoney(){
-  money=parseFloat(document.getElementById("startMoney").value);
-  chip=parseFloat(document.getElementById("chipInput").value);
+  money=parseFloat(startMoney.value);
+  chip=parseFloat(chipInput.value);
   baseChip=chip;
-
-  let percent=parseFloat(document.getElementById("profitPercent").value);
-  target=money + (money*percent/100);
-
+  target=money+(money*profitPercent.value/100);
   updateMoney();
 }
 
-// 🎯 เลือกไพ่
-function select(card,type){
+/* 🃏 Select */
+function select(card){
   if(locked) return;
 
-  if(type==="dealer"){
-    dealer=card;
-  }else{
-    player.push(card);
-  }
+  if(dealer===null) dealer=card;
+  else player.push(card);
 
-  showCards();
+  updateCount(card);
+  show();
+}
+
+/* 👀 Show */
+function show(){
+  dealerShow.innerText=dealer||"-";
+  playerShow.innerText=player.join(",");
   update();
 }
 
-// 👀 แสดงไพ่
-function showCards(){
-  document.getElementById("dealerShow").innerText = dealer || "-";
-  document.getElementById("playerShow").innerText = player.join(", ");
+/* 🧠 Count */
+function updateCount(card){
+  if(card>=2 && card<=6) runningCount++;
+  if(card==10 || card=="A") runningCount--;
 }
 
-// 🧠 คำนวณแต้ม
+/* 🎯 True Count */
+function getTC(){
+  return (runningCount/decks).toFixed(2);
+}
+
+/* 💰 EV */
+function getEV(){
+  let tc=parseFloat(getTC());
+  if(tc>=2) return "+EV";
+  if(tc<=-1) return "-EV";
+  return "0EV";
+}
+
+/* 🧠 Value */
 function getValue(hand){
   let t=0,a=0;
   hand.forEach(c=>{
     if(c==="A"){a++; t+=11;} else t+=c;
   });
-  while(t>21 && a>0){ t-=10; a--; }
+  while(t>21 && a>0){t-=10; a--;}
   return t;
 }
 
-// 🧠 soft check
-function isSoft(hand){
-  return hand.includes("A") && getValue(hand)<=21;
-}
-
-// 🧠 STRATEGY ฉลาด
+/* 🎯 Advice + Deviation */
 function getAdvice(){
   if(player.length<2 || dealer===null) return "-";
 
   let total=getValue(player);
   let d=dealer;
-  let p1=player[0];
-  let p2=player[1];
+  let tc=parseFloat(getTC());
 
-  if(player.length===2 && p1===p2){
-    if(p1==="A") return "🔥 SPLIT ทันที";
-    if(p1===8) return "🔥 SPLIT หนี 16";
-    if(p1===9){
-      return ([2,3,4,5,6,8,9].includes(d))
-        ? "🔥 SPLIT ได้เปรียบ"
-        : "🟢 STAND";
-    }
-    if(p1===7 && d<=7) return "⚠️ SPLIT ได้";
-    if(p1===6 && d<=6) return "⚠️ SPLIT ได้";
-    if(p1===5) return (d<=9) ? "🔥 DOUBLE" : "🔵 HIT";
-  }
+  // 💀 Deviation
+  if(total==16 && d==10 && tc>=1) return "🔥 STAND (Deviation)";
+  if(total==10 && d==10 && tc>=2) return "🔥 DOUBLE (Deviation)";
 
-  if(isSoft(player)){
-    if(total>=19) return "🟢 STAND";
-    if(total===18){
-      if(d>=3&&d<=6) return "🔥 DOUBLE";
-      if(d<=8) return "🟢 STAND";
-      return "🔵 HIT";
-    }
-    if(total<=17){
-      if(d>=4&&d<=6) return "🔥 DOUBLE";
-      return "🔵 HIT";
-    }
-  }
-
+  // Basic
   if(total>=17) return "🟢 STAND";
-  if(total>=13&&total<=16) return d<=6?"🟢 STAND":"🔵 HIT";
-  if(total===12) return (d>=4&&d<=6)?"🟢 STAND":"🔵 HIT";
-
-  if(player.length===2){
-    if(total===11) return "🔥 DOUBLE เดี๋ยวนี้";
-    if(total===10) return d<=9?"🔥 DOUBLE":"🔵 HIT";
-    if(total===9) return (d>=3&&d<=6)?"⚠️ DOUBLE ได้":"🔵 HIT";
+  if(total<=11) return "🔵 HIT";
+  if(total>=12 && total<=16){
+    return d<=6?"🟢 STAND":"🔵 HIT";
   }
-
   return "🔵 HIT";
 }
 
-// 🎯 อัปเดต
+/* 🔄 Update */
 function update(){
   let total=getValue(player);
-  let advice=getAdvice();
-
-  document.getElementById("result").innerText =
-    `แต้ม: ${total} | แนะนำ: ${advice}`;
+  result.innerText=`แต้ม:${total} | ${getAdvice()}`;
+  countShow.innerText=`RC:${runningCount} | TC:${getTC()} | ${getEV()}`;
 }
 
-// 💰 เงิน
+/* 💰 Money */
 function updateMoney(){
-  document.getElementById("moneyShow").innerText =
-    `เงิน: ${money} | เป้า: ${target} | ชิพ: ${chip}`;
+  moneyShow.innerText=`เงิน:${money} เป้า:${target} ชิพ:${chip}`;
 }
 
-// 🎯 WIN
+/* 🟢 Win */
 function win(){
   if(locked) return;
-
-  money += chip;
+  money+=chip;
   winStreak++;
-
-  if(winStreak>=2){
-    chip += baseChip;
-  }
-
+  if(winStreak>=2) chip+=baseChip;
   checkTarget();
   updateMoney();
 }
 
-// ❌ LOSE
+/* 🔴 Lose */
 function lose(){
   if(locked) return;
-
-  money -= chip;
+  money-=chip;
   winStreak=0;
-  chip = baseChip;
-
+  chip=baseChip;
   updateMoney();
 }
 
-// 🚨 แจ้งเตือน + ล็อก
+/* 🚨 Target */
 function checkTarget(){
-  if(money >= target){
-
+  if(money>=target){
     locked=true;
-
-    let profit = money - parseFloat(document.getElementById("startMoney").value);
-
-    const messages = [
-      "มึงกำไรแล้ว จะอยู่ให้โดนแดกคืนทำไม",
-      "พอได้แล้ว อย่าโง่เล่นต่อ",
-      "ออกเดี๋ยวนี้ ก่อนจะเสียคืนหมด",
-      "โลภ = เจ๊ง จำไว้",
-      "หยุดเถอะ นี่คือจังหวะรอด"
-    ];
-
-    let randomMsg = messages[Math.floor(Math.random()*messages.length)];
-
-    document.getElementById("overlay").innerHTML =
-      `💰 กำไร: ${profit} บาท<br><br>${randomMsg}`;
-
-    document.getElementById("overlay").style.display="flex";
-
+    let profit=money-startMoney.value;
+    overlay.innerHTML=`💰 +${profit}<br>หยุดเดี๋ยวนี้`;
+    overlay.style.display="flex";
     document.body.style.pointerEvents="none";
   }
 }
 
-// 🔁 รีเซ็ต
+/* 🔁 Reset */
 function resetRound(){
   if(locked) return;
   player=[];
   dealer=null;
-  showCards();
-  document.getElementById("result").innerText="คำแนะนำ: -";
+  show();
+  result.innerText="-";
 }
 </script>
 
