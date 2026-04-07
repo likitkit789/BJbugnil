@@ -14,49 +14,55 @@ body {
   text-align:center;
 }
 
-/* 📱 Layout */
-.container {
-  padding:10px;
+h2 {
+  font-size:18px;
+  margin:5px;
 }
 
-/* 🎯 Input bar */
+/* 📱 top */
 .topbar {
   display:flex;
-  gap:5px;
   justify-content:center;
-  flex-wrap:wrap;
+  gap:5px;
 }
 .topbar input {
-  width:70px;
-  padding:6px;
+  width:65px;
+  padding:5px;
   border-radius:6px;
   border:none;
   text-align:center;
 }
 
-/* 🔘 Buttons grid */
+/* 🔢 card buttons */
 .grid {
   display:grid;
   grid-template-columns: repeat(5, 1fr);
-  gap:6px;
-  padding:10px;
+  gap:5px;
+  padding:8px;
 }
 button {
-  padding:12px;
-  font-size:16px;
-  border-radius:8px;
+  padding:8px;
+  font-size:14px;
+  border-radius:6px;
   border:none;
 }
-.card { background:white; color:black;}
-.action { background:gold;}
-.reset { background:red; color:white;}
+.card { background:white; color:black; }
 
-/* 📊 Info */
-.result { font-size:18px; color:#00ffcc; margin-top:8px;}
-.money { font-size:16px; color:#ffd700;}
-.count { font-size:14px; color:#ccc;}
+/* 🎯 BIG DISPLAY */
+.big {
+  font-size:22px;
+  font-weight:bold;
+}
+.dealer { color:#ff4d4d; }
+.player { color:#00ffcc; }
+.score { color:#ffd700; }
 
-/* 🚨 Overlay */
+/* 📊 */
+.result { font-size:16px; margin-top:5px; }
+.money { font-size:14px; color:#ffd700; }
+.count { font-size:13px; color:#ccc; }
+
+/* 🚨 overlay */
 .overlay {
   position:fixed;
   top:0; left:0;
@@ -77,153 +83,139 @@ button {
 
 <div class="overlay" id="overlay"></div>
 
-<div class="container">
-
-<h3>🔥 BJBUGNIL PRO 🔥</h3>
+<h2>🔥 BJBUGNIL PRO 🔥</h2>
 
 <div class="topbar">
   <input id="startMoney" value="1000">
   <input id="chipInput" value="50">
   <input id="profitPercent" value="10">
-  <button onclick="setMoney()">เริ่ม</button>
+  <button onclick="setMoney()">OK</button>
 </div>
 
-<div>Dealer: <span id="dealerShow">-</span></div>
-<div>Player: <span id="playerShow">-</span></div>
+<div class="big dealer">Dealer: <span id="dealerShow">-</span></div>
+<div class="big player">Player: <span id="playerShow">-</span></div>
+<div class="big score">แต้ม: <span id="scoreShow">0</span></div>
 
 <div class="grid" id="cards"></div>
 
 <div class="result" id="result">-</div>
-<div class="money" id="moneyShow">เงิน: 0</div>
-<div class="count" id="countShow">RC:0 | TC:0 | EV:0</div>
+<div class="money" id="moneyShow">เงิน:0</div>
+<div class="count" id="countShow">RC:0 | TC:0 | EV:0%</div>
 
-<button class="action" onclick="win()">Win</button>
-<button class="action" onclick="lose()">Lose</button>
-<button class="reset" onclick="resetRound()">Reset</button>
-
-</div>
+<button onclick="win()">Win</button>
+<button onclick="lose()">Lose</button>
+<button onclick="resetRound()">Reset</button>
 
 <script>
 const cards=["A",2,3,4,5,6,7,8,9,10];
 
-let dealer=null;
-let player=[];
+let dealer=null,player=[];
+let runningCount=0,decks=2;
 let money=0,target=0;
 let chip=50,baseChip=50;
-let runningCount=0,decks=2;
-let winStreak=0;
-let locked=false;
+let winStreak=0,locked=false;
 
-/* 🔘 Create buttons */
-const el=document.getElementById("cards");
+/* buttons */
 cards.forEach(c=>{
   let b=document.createElement("button");
   b.innerText=c;
   b.className="card";
   b.onclick=()=>select(c);
-  el.appendChild(b);
+  cardsDiv.appendChild(b);
 });
+function cardsDiv(){return document.getElementById("cards")}
 
-/* 💰 Setup */
+/* setup */
 function setMoney(){
-  money=parseFloat(startMoney.value);
-  chip=parseFloat(chipInput.value);
+  money=+startMoney.value;
+  chip=+chipInput.value;
   baseChip=chip;
   target=money+(money*profitPercent.value/100);
   updateMoney();
 }
 
-/* 🃏 Select */
+/* select */
 function select(card){
   if(locked) return;
 
   if(dealer===null) dealer=card;
   else player.push(card);
 
-  updateCount(card);
-  show();
-}
-
-/* 👀 Show */
-function show(){
-  dealerShow.innerText=dealer||"-";
-  playerShow.innerText=player.join(",");
+  count(card);
   update();
 }
 
-/* 🧠 Count */
-function updateCount(card){
-  if(card>=2 && card<=6) runningCount++;
-  if(card==10 || card=="A") runningCount--;
+/* count */
+function count(c){
+  if(c>=2&&c<=6) runningCount++;
+  if(c==10||c=="A") runningCount--;
+}
+function TC(){return (runningCount/decks).toFixed(2)}
+
+/* EV % */
+function EV(){
+  let tc=parseFloat(TC());
+  return (tc*0.5).toFixed(2); // approx
 }
 
-/* 🎯 True Count */
-function getTC(){
-  return (runningCount/decks).toFixed(2);
-}
-
-/* 💰 EV */
-function getEV(){
-  let tc=parseFloat(getTC());
-  if(tc>=2) return "+EV";
-  if(tc<=-1) return "-EV";
-  return "0EV";
-}
-
-/* 🧠 Value */
-function getValue(hand){
+/* value */
+function value(h){
   let t=0,a=0;
-  hand.forEach(c=>{
-    if(c==="A"){a++; t+=11;} else t+=c;
+  h.forEach(c=>{
+    if(c=="A"){a++;t+=11;} else t+=c;
   });
-  while(t>21 && a>0){t-=10; a--;}
+  while(t>21&&a>0){t-=10;a--;}
   return t;
 }
 
-/* 🎯 Advice + Deviation */
-function getAdvice(){
-  if(player.length<2 || dealer===null) return "-";
+/* 🎯 FULL DEVIATION */
+function advice(){
+  if(player.length<2||dealer===null) return "-";
 
-  let total=getValue(player);
+  let t=value(player);
   let d=dealer;
-  let tc=parseFloat(getTC());
+  let tc=parseFloat(TC());
 
-  // 💀 Deviation
-  if(total==16 && d==10 && tc>=1) return "🔥 STAND (Deviation)";
-  if(total==10 && d==10 && tc>=2) return "🔥 DOUBLE (Deviation)";
+  // 🔥 deviations
+  if(t==16&&d==10&&tc>=1) return "🔥 STAND";
+  if(t==15&&d==10&&tc>=4) return "🔥 STAND";
+  if(t==10&&d==10&&tc>=4) return "🔥 DOUBLE";
+  if(t==12&&d==3&&tc>=2) return "🔥 STAND";
 
-  // Basic
-  if(total>=17) return "🟢 STAND";
-  if(total<=11) return "🔵 HIT";
-  if(total>=12 && total<=16){
-    return d<=6?"🟢 STAND":"🔵 HIT";
-  }
+  // basic
+  if(t>=17) return "🟢 STAND";
+  if(t<=11) return "🔵 HIT";
+  if(t>=12&&t<=16) return d<=6?"🟢 STAND":"🔵 HIT";
+
   return "🔵 HIT";
 }
 
-/* 🔄 Update */
+/* update */
 function update(){
-  let total=getValue(player);
-  result.innerText=`แต้ม:${total} | ${getAdvice()}`;
-  countShow.innerText=`RC:${runningCount} | TC:${getTC()} | ${getEV()}`;
+  let t=value(player);
+
+  dealerShow.innerText=dealer||"-";
+  playerShow.innerText=player.join(",");
+  scoreShow.innerText=t;
+
+  result.innerText=advice();
+  countShow.innerText=`RC:${runningCount} TC:${TC()} EV:${EV()}%`;
 }
 
-/* 💰 Money */
+/* money */
 function updateMoney(){
   moneyShow.innerText=`เงิน:${money} เป้า:${target} ชิพ:${chip}`;
 }
 
-/* 🟢 Win */
+/* win/lose */
 function win(){
   if(locked) return;
   money+=chip;
   winStreak++;
   if(winStreak>=2) chip+=baseChip;
-  checkTarget();
+  check();
   updateMoney();
 }
-
-/* 🔴 Lose */
 function lose(){
   if(locked) return;
   money-=chip;
@@ -232,24 +224,23 @@ function lose(){
   updateMoney();
 }
 
-/* 🚨 Target */
-function checkTarget(){
+/* overlay */
+function check(){
   if(money>=target){
     locked=true;
     let profit=money-startMoney.value;
-    overlay.innerHTML=`💰 +${profit}<br>หยุดเดี๋ยวนี้`;
+    overlay.innerHTML=`💰 +${profit}<br>พอแล้ว หยุด`;
     overlay.style.display="flex";
     document.body.style.pointerEvents="none";
   }
 }
 
-/* 🔁 Reset */
+/* reset */
 function resetRound(){
   if(locked) return;
-  player=[];
   dealer=null;
-  show();
-  result.innerText="-";
+  player=[];
+  update();
 }
 </script>
 
