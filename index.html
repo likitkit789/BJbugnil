@@ -16,7 +16,6 @@ body {
 
 h2 { font-size:18px; margin:6px; }
 
-/* 🔧 top input */
 .topbar {
   display:flex;
   justify-content:center;
@@ -30,7 +29,7 @@ h2 { font-size:18px; margin:6px; }
   text-align:center;
 }
 
-/* 🔢 grid */
+/* 🔢 ปุ่มเลข */
 .grid {
   display:flex;
   flex-wrap:wrap;
@@ -38,8 +37,6 @@ h2 { font-size:18px; margin:6px; }
   gap:6px;
   padding:10px;
 }
-
-/* 🔘 ปุ่มเลข (เล็ก) */
 .card {
   width:48px;
   height:48px;
@@ -51,19 +48,27 @@ h2 { font-size:18px; margin:6px; }
   color:black;
 }
 
-/* 🟡 ปุ่มใหญ่ */
-.action {
-  width:90px;
-  height:50px;
-  font-size:16px;
-  font-weight:bold;
-  border-radius:8px;
-  border:none;
-  background:gold;
-  margin:5px;
+/* 🎮 ปุ่มควบคุม */
+.controls {
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-top:10px;
 }
 
-/* 🎯 display */
+.win { background:#2ecc71; width:95px; height:52px; font-weight:bold; }
+.lose { background:#e74c3c; width:95px; height:52px; font-weight:bold; }
+
+.undo { background:#f39c12; width:75px; height:48px; font-weight:bold; }
+.reset { background:#7f8c8d; width:75px; height:48px; font-weight:bold; }
+
+button {
+  border:none;
+  border-radius:8px;
+  color:white;
+}
+
+/* 📊 display */
 .big { font-size:22px; font-weight:bold; }
 .dealer { color:#ff4d4d; }
 .player { color:#00ffcc; }
@@ -113,15 +118,22 @@ h2 { font-size:18px; margin:6px; }
 <div id="moneyShow" class="money">เงิน:0</div>
 <div id="countShow" class="count">RC:0 | TC:0 | EV:0%</div>
 
-<button class="action" onclick="win()">Win</button>
-<button class="action" onclick="lose()">Lose</button>
-<br>
-<button onclick="resetRound()">Reset</button>
+<div class="controls">
+  <button class="win" onclick="win()">Win</button>
+  <button class="lose" onclick="lose()">Lose</button>
+</div>
+
+<div class="controls">
+  <button class="undo" onclick="undo()">Undo</button>
+  <button class="reset" onclick="resetRound()">Reset</button>
+</div>
 
 <script>
 const cards=["A",2,3,4,5,6,7,8,9,10];
 
 let dealer=null, player=[];
+let history=[];
+
 let runningCount=0, decks=2;
 let money=0, target=0;
 let chip=50, baseChip=50;
@@ -150,11 +162,39 @@ function setMoney(){
 function select(card){
   if(locked) return;
 
-  if(dealer===null) dealer=card;
-  else player.push(card);
+  if(dealer===null){
+    dealer=card;
+    history.push({type:"dealer",card});
+  } else {
+    player.push(card);
+    history.push({type:"player",card});
+  }
 
   updateCount(card);
   update();
+}
+
+/* 🔙 undo */
+function undo(){
+  if(history.length===0 || locked) return;
+
+  let last=history.pop();
+
+  if(last.type==="dealer"){
+    dealer=null;
+  } else {
+    player.pop();
+  }
+
+  // คืน count
+  reverseCount(last.card);
+
+  update();
+}
+
+function reverseCount(c){
+  if(c>=2 && c<=6) runningCount--;
+  if(c==10 || c=="A") runningCount++;
 }
 
 /* 🧠 count */
@@ -167,7 +207,6 @@ function TC(){
   return (runningCount/decks).toFixed(2);
 }
 
-/* 💰 EV */
 function EV(){
   let tc=parseFloat(TC());
   return (tc*0.5).toFixed(2);
@@ -183,7 +222,7 @@ function value(hand){
   return t;
 }
 
-/* 🔥 Deviation */
+/* 🎯 advice */
 function advice(){
   if(player.length<2 || dealer===null) return "-";
 
@@ -266,6 +305,8 @@ function resetRound(){
   if(locked) return;
   dealer=null;
   player=[];
+  history=[];
+  runningCount=0;
   update();
 }
 </script>
