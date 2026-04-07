@@ -30,29 +30,37 @@ h2 { font-size:18px; margin:6px; }
   text-align:center;
 }
 
-/* 🔢 grid buttons */
+/* 🔢 grid */
 .grid {
-  display:grid;
-  grid-template-columns: repeat(5, 1fr);
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
   gap:6px;
   padding:10px;
 }
-button {
-  width:100%;
-  aspect-ratio: 1 / 1;   /* 🔥 ทำให้เป็นสี่เหลี่ยม */
+
+/* 🔘 ปุ่มเลข (เล็ก) */
+.card {
+  width:48px;
+  height:48px;
   font-size:18px;
   font-weight:bold;
-  border-radius:10px;
+  border-radius:8px;
   border:none;
-}
-
-/* ปุ่มไพ่ */
-.card {
   background:white;
   color:black;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+}
+
+/* 🟡 ปุ่มใหญ่ */
+.action {
+  width:90px;
+  height:50px;
+  font-size:16px;
+  font-weight:bold;
+  border-radius:8px;
+  border:none;
+  background:gold;
+  margin:5px;
 }
 
 /* 🎯 display */
@@ -105,8 +113,9 @@ button {
 <div id="moneyShow" class="money">เงิน:0</div>
 <div id="countShow" class="count">RC:0 | TC:0 | EV:0%</div>
 
-<button onclick="win()">Win</button>
-<button onclick="lose()">Lose</button>
+<button class="action" onclick="win()">Win</button>
+<button class="action" onclick="lose()">Lose</button>
+<br>
 <button onclick="resetRound()">Reset</button>
 
 <script>
@@ -118,8 +127,8 @@ let money=0, target=0;
 let chip=50, baseChip=50;
 let winStreak=0, locked=false;
 
-/* ✅ FIX ปุ่ม (ตัวจริง) */
-const grid = document.getElementById("cards");
+/* 🔘 สร้างปุ่ม */
+const grid=document.getElementById("cards");
 cards.forEach(c=>{
   let b=document.createElement("button");
   b.innerText=c;
