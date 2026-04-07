@@ -6,91 +6,37 @@
 <title>BJBUGNIL PRO</title>
 
 <style>
-body {
-  margin:0;
-  font-family: Arial;
-  background:#0b3d2e;
-  color:white;
-  text-align:center;
-}
+body {margin:0;font-family:Arial;background:#0b3d2e;color:white;text-align:center;}
+h2 {font-size:18px;margin:6px;}
 
-h2 { font-size:18px; margin:6px; }
+.topbar {display:flex;justify-content:center;gap:5px;}
+.topbar input {width:60px;padding:5px;border-radius:6px;border:none;text-align:center;}
 
-.topbar {
-  display:flex;
-  justify-content:center;
-  gap:5px;
-}
-.topbar input {
-  width:60px;
-  padding:5px;
-  border-radius:6px;
-  border:none;
-  text-align:center;
-}
+.grid {display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:10px;}
+.card {width:48px;height:48px;font-size:18px;font-weight:bold;border-radius:8px;border:none;background:white;color:black;}
 
-/* 🔢 ปุ่มเลข */
-.grid {
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:6px;
-  padding:10px;
-}
-.card {
-  width:48px;
-  height:48px;
-  font-size:18px;
-  font-weight:bold;
-  border-radius:8px;
-  border:none;
-  background:white;
-  color:black;
-}
+.controls {display:flex;justify-content:center;gap:8px;margin-top:10px;}
+.win {background:#2ecc71;width:95px;height:52px;font-weight:bold;}
+.lose {background:#e74c3c;width:95px;height:52px;font-weight:bold;}
+.undo {background:#f39c12;width:75px;height:48px;font-weight:bold;}
+.reset {background:#7f8c8d;width:75px;height:48px;font-weight:bold;}
 
-/* 🎮 ปุ่มควบคุม */
-.controls {
-  display:flex;
-  justify-content:center;
-  gap:8px;
-  margin-top:10px;
-}
+button {border:none;border-radius:8px;color:white;}
 
-.win { background:#2ecc71; width:95px; height:52px; font-weight:bold; }
-.lose { background:#e74c3c; width:95px; height:52px; font-weight:bold; }
+.big {font-size:22px;font-weight:bold;}
+.dealer {color:#ff4d4d;}
+.player {color:#00ffcc;}
+.score {color:#ffd700;}
 
-.undo { background:#f39c12; width:75px; height:48px; font-weight:bold; }
-.reset { background:#7f8c8d; width:75px; height:48px; font-weight:bold; }
+.result {margin-top:6px;font-size:16px;}
+.money {font-size:14px;color:#ffd700;}
+.count {font-size:13px;color:#ccc;}
 
-button {
-  border:none;
-  border-radius:8px;
-  color:white;
-}
-
-/* 📊 display */
-.big { font-size:22px; font-weight:bold; }
-.dealer { color:#ff4d4d; }
-.player { color:#00ffcc; }
-.score { color:#ffd700; }
-
-.result { margin-top:6px; font-size:16px; }
-.money { font-size:14px; color:#ffd700; }
-.count { font-size:13px; color:#ccc; }
-
-/* 🚨 overlay */
 .overlay {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:black;
-  color:white;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
-  font-size:24px;
-  z-index:9999;
+position:fixed;top:0;left:0;width:100%;height:100%;
+background:black;color:white;display:none;
+justify-content:center;align-items:center;
+text-align:center;font-size:24px;z-index:9999;
 }
 </style>
 </head>
@@ -102,10 +48,10 @@ button {
 <h2>🔥 BJBUGNIL PRO 🔥</h2>
 
 <div class="topbar">
-  <input id="startMoney" value="1000">
-  <input id="chipInput" value="50">
-  <input id="profitPercent" value="10">
-  <button onclick="setMoney()">OK</button>
+<input id="startMoney" value="1000">
+<input id="chipInput" value="50">
+<input id="profitPercent" value="10">
+<button onclick="setMoney()">OK</button>
 </div>
 
 <div class="big dealer">Dealer: <span id="dealerShow">-</span></div>
@@ -119,195 +65,199 @@ button {
 <div id="countShow" class="count">RC:0 | TC:0 | EV:0%</div>
 
 <div class="controls">
-  <button class="win" onclick="win()">Win</button>
-  <button class="lose" onclick="lose()">Lose</button>
+<button class="win" onclick="win()">Win</button>
+<button class="lose" onclick="lose()">Lose</button>
 </div>
 
 <div class="controls">
-  <button class="undo" onclick="undo()">Undo</button>
-  <button class="reset" onclick="resetRound()">Reset</button>
+<button class="undo" onclick="undo()">Undo</button>
+<button class="reset" onclick="resetRound()">Reset</button>
 </div>
 
 <script>
 const cards=["A",2,3,4,5,6,7,8,9,10];
 
-let dealer=null, player=[];
-let history=[];
-
+let dealer=null, player=[], history=[];
 let runningCount=0, decks=2;
-let money=0, target=0;
-let chip=50, baseChip=50;
-let winStreak=0, locked=false;
+let money=0,target=0;
+let chip=50,baseChip=50;
+let winStreak=0,locked=false;
 
-/* 🔘 สร้างปุ่ม */
+/* create buttons */
 const grid=document.getElementById("cards");
 cards.forEach(c=>{
-  let b=document.createElement("button");
-  b.innerText=c;
-  b.className="card";
-  b.onclick=()=>select(c);
-  grid.appendChild(b);
+let b=document.createElement("button");
+b.innerText=c;
+b.className="card";
+b.onclick=()=>select(c);
+grid.appendChild(b);
 });
 
-/* 💰 setup */
+/* money setup */
 function setMoney(){
-  money=+startMoney.value;
-  chip=+chipInput.value;
-  baseChip=chip;
-  target=money+(money*profitPercent.value/100);
-  updateMoney();
+money=+startMoney.value;
+chip=+chipInput.value;
+baseChip=chip;
+target=money+(money*profitPercent.value/100);
+updateMoney();
 }
 
-/* 🃏 select */
+/* select card */
 function select(card){
-  if(locked) return;
+if(locked) return;
 
-  if(dealer===null){
-    dealer=card;
-    history.push({type:"dealer",card});
-  } else {
-    player.push(card);
-    history.push({type:"player",card});
-  }
-
-  updateCount(card);
-  update();
+if(dealer===null){
+dealer=card;
+history.push({type:"dealer",card});
+}else{
+player.push(card);
+history.push({type:"player",card});
 }
 
-/* 🔙 undo */
+updateCount(card);
+update();
+}
+
+/* undo */
 function undo(){
-  if(history.length===0 || locked) return;
+if(history.length===0||locked) return;
 
-  let last=history.pop();
+let last=history.pop();
 
-  if(last.type==="dealer"){
-    dealer=null;
-  } else {
-    player.pop();
-  }
+if(last.type==="dealer") dealer=null;
+else player.pop();
 
-  // คืน count
-  reverseCount(last.card);
-
-  update();
+reverseCount(last.card);
+update();
 }
 
 function reverseCount(c){
-  if(c>=2 && c<=6) runningCount--;
-  if(c==10 || c=="A") runningCount++;
+if(c>=2&&c<=6) runningCount--;
+if(c==10||c=="A") runningCount++;
 }
 
-/* 🧠 count */
+/* count */
 function updateCount(c){
-  if(c>=2 && c<=6) runningCount++;
-  if(c==10 || c=="A") runningCount--;
+if(c>=2&&c<=6) runningCount++;
+if(c==10||c=="A") runningCount--;
 }
 
-function TC(){
-  return (runningCount/decks).toFixed(2);
+function TC(){return (runningCount/decks).toFixed(2);}
+function EV(){return (parseFloat(TC())*0.5).toFixed(2);}
+
+/* value */
+function value(h){
+let t=0,a=0;
+h.forEach(c=>{
+if(c=="A"){a++;t+=11;} else t+=c;
+});
+while(t>21&&a>0){t-=10;a--;}
+return t;
 }
 
-function EV(){
-  let tc=parseFloat(TC());
-  return (tc*0.5).toFixed(2);
-}
-
-/* 🧠 value */
-function value(hand){
-  let t=0,a=0;
-  hand.forEach(c=>{
-    if(c=="A"){a++;t+=11;} else t+=c;
-  });
-  while(t>21 && a>0){t-=10;a--;}
-  return t;
-}
-
-/* 🎯 advice */
+/* 🧠 SAFE + SMART STRATEGY */
 function advice(){
-  if(player.length<2 || dealer===null) return "-";
+if(player.length<2||dealer===null) return "-";
 
-  let t=value(player);
-  let d=dealer;
-  let tc=parseFloat(TC());
+let t=value(player);
+let d=dealer;
+let tc=parseFloat(TC());
 
-  if(t==16 && d==10 && tc>=1) return "🔥 STAND (DEV)";
-  if(t==15 && d==10 && tc>=4) return "🔥 STAND (DEV)";
-  if(t==10 && d==10 && tc>=4) return "🔥 DOUBLE (DEV)";
-  if(t==12 && d==3 && tc>=2) return "🔥 STAND (DEV)";
+/* 🔥 SPLIT */
+if(player.length==2 && player[0]==player[1]){
+let p=player[0];
 
-  if(t>=17) return "🟢 STAND";
-  if(t<=11) return "🔵 HIT";
-  if(t>=12 && t<=16){
-    return d<=6?"🟢 STAND":"🔵 HIT";
-  }
-
-  return "🔵 HIT";
+if(p=="A") return "🔥 SPLIT";
+if(p==8) return d<=9?"🔥 SPLIT":"⚠️ SPLIT";
+if(p==9){
+if([2,3,4,5,6].includes(d)) return "🔥 SPLIT";
+if([8,9].includes(d)) return "⚠️ SPLIT";
+return "🟢 STAND";
+}
+if(p==7) return d<=6?"⚠️ SPLIT":"🔵 HIT";
+if(p==6) return d<=5?"⚠️ SPLIT":"🔵 HIT";
+if(p==5) return d<=7?"🔥 DOUBLE":"🔵 HIT";
 }
 
-/* 🔄 update */
+/* 🔥 DOUBLE */
+if(player.length==2){
+if(t==11) return d<=8?"🔥 DOUBLE":"⚠️ HIT";
+if(t==10){
+if(d<=7) return "🔥 DOUBLE";
+if(d<=9) return "⚠️ DOUBLE";
+return "🔵 HIT";
+}
+if(t==9){
+return (d>=3&&d<=6)?"⚠️ DOUBLE":"🔵 HIT";
+}
+}
+
+/* 🔥 Deviation */
+if(t==16&&d==10&&tc>=1) return "🔥 STAND (DEV)";
+
+/* basic */
+if(t>=17) return "🟢 STAND";
+if(t<=11) return "🔵 HIT";
+if(t>=12&&t<=16) return d<=6?"🟢 STAND":"🔵 HIT";
+
+return "🔵 HIT";
+}
+
+/* update */
 function update(){
-  let t=value(player);
+let t=value(player);
 
-  dealerShow.innerText=dealer||"-";
-  playerShow.innerText=player.join(",");
-  scoreShow.innerText=t;
+dealerShow.innerText=dealer||"-";
+playerShow.innerText=player.join(",");
+scoreShow.innerText=t;
 
-  result.innerText=advice();
-  countShow.innerText=`RC:${runningCount} TC:${TC()} EV:${EV()}%`;
+result.innerText=advice();
+countShow.innerText=`RC:${runningCount} TC:${TC()} EV:${EV()}%`;
 }
 
-/* 💰 money */
+/* money */
 function updateMoney(){
-  moneyShow.innerText=`เงิน:${money} เป้า:${target} ชิพ:${chip}`;
+moneyShow.innerText=`เงิน:${money} เป้า:${target} ชิพ:${chip}`;
 }
 
-/* 🟢 win */
+/* win/lose */
 function win(){
-  if(locked) return;
-  money+=chip;
-  winStreak++;
-  if(winStreak>=2) chip+=baseChip;
-  check();
-  updateMoney();
+if(locked) return;
+money+=chip;
+winStreak++;
+if(winStreak>=2) chip+=baseChip;
+check();
+updateMoney();
 }
 
-/* 🔴 lose */
 function lose(){
-  if(locked) return;
-  money-=chip;
-  winStreak=0;
-  chip=baseChip;
-  updateMoney();
+if(locked) return;
+money-=chip;
+winStreak=0;
+chip=baseChip;
+updateMoney();
 }
 
-/* 🚨 overlay */
+/* overlay */
 function check(){
-  if(money>=target){
-    locked=true;
-    let profit=money-startMoney.value;
+if(money>=target){
+locked=true;
+let profit=money-startMoney.value;
 
-    const msg=[
-      "พอแล้ว ออกเดี๋ยวนี้",
-      "กำไรแล้ว ยังจะโลภอีก?",
-      "หยุด = รอด",
-      "เล่นต่อ = เสียคืน",
-      "นี่คือจังหวะหนี"
-    ];
-
-    overlay.innerHTML=`💰 +${profit}<br>${msg[Math.floor(Math.random()*5)]}`;
-    overlay.style.display="flex";
-    document.body.style.pointerEvents="none";
-  }
+overlay.innerHTML=`💰 +${profit}<br>หยุดตอนนี้ดีที่สุด`;
+overlay.style.display="flex";
+document.body.style.pointerEvents="none";
+}
 }
 
-/* 🔁 reset */
+/* reset */
 function resetRound(){
-  if(locked) return;
-  dealer=null;
-  player=[];
-  history=[];
-  runningCount=0;
-  update();
+if(locked) return;
+dealer=null;
+player=[];
+history=[];
+runningCount=0;
+update();
 }
 </script>
 
