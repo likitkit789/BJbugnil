@@ -38,12 +38,22 @@ h2 { font-size:18px; margin:6px; }
   padding:10px;
 }
 button {
-  padding:10px;
-  font-size:14px;
-  border-radius:6px;
+  width:100%;
+  aspect-ratio: 1 / 1;   /* 🔥 ทำให้เป็นสี่เหลี่ยม */
+  font-size:18px;
+  font-weight:bold;
+  border-radius:10px;
   border:none;
 }
-.card { background:white; color:black; }
+
+/* ปุ่มไพ่ */
+.card {
+  background:white;
+  color:black;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
 /* 🎯 display */
 .big { font-size:22px; font-weight:bold; }
