@@ -12,7 +12,6 @@ h2 {font-size:18px;margin:6px;}
 .topbar {display:flex;justify-content:center;gap:5px;}
 .topbar input {width:60px;padding:5px;border-radius:6px;border:none;text-align:center;}
 
-/* 🔢 2 แถว */
 .grid {
   display:grid;
   grid-template-columns: repeat(5, 1fr);
@@ -101,6 +100,7 @@ let money=0,target=0;
 let chip=50,baseChip=50;
 let winStreak=0,locked=false;
 
+/* buttons */
 const grid=document.getElementById("cards");
 cards.forEach(c=>{
 let b=document.createElement("button");
@@ -110,11 +110,11 @@ b.onclick=()=>select(c);
 grid.appendChild(b);
 });
 
-/* money */
+/* setup */
 function setMoney(){
 money=+startMoney.value;
-chip=+chipInput.value;
-baseChip=chip;
+baseChip=+chipInput.value;
+chip=baseChip;
 target=money+(money*profitPercent.value/100);
 updateMoney();
 }
@@ -160,25 +160,37 @@ if(c==10||c=="A") runningCount--;
 
 function TC(){return runningCount/decks}
 
-/* 💰 แปลเป็นภาษาเข้าใจง่าย */
-function countText(){
+/* 💰 AUTO CHIP */
+function adjustChip(){
 let tc=TC();
 
-let trend = runningCount>0?"ไพ่เล็กออกเยอะ":"ไพ่ใหญ่กำลังมา";
-let edge = tc>=2?"ได้เปรียบมาก":tc>=1?"ได้เปรียบ":"ปกติ";
-let ev = (tc*0.5).toFixed(2)+"%";
-
-return {trend,edge,ev};
+if(tc>=2 && winStreak>=2){
+chip=baseChip*3;
+return "🔥 x3 จังหวะทอง";
 }
 
-/* 🎯 แนะนำชิพ */
-function betAdviceFunc(){
-let tc=TC();
+if(tc>=1){
+chip=baseChip*2;
+return "🟢 x2 ได้เปรียบ";
+}
 
-if(tc>=2) return "🔥 เพิ่มชิพ (จังหวะดี)";
-if(tc>=1) return "🟢 เล่นปกติ";
-if(tc>=0) return "⚠️ ลดชิพ";
-return "❌ พัก / เปลี่ยนโต๊ะ";
+if(tc>=0){
+chip=baseChip;
+return "⚠️ ปกติ";
+}
+
+chip=Math.max(baseChip/2,10);
+return "❌ ลดชิพ";
+}
+
+/* 📊 แปลค่า */
+function countText(){
+let tc=TC();
+return {
+trend: runningCount>0?"ไพ่เล็กออก":"ไพ่ใหญ่กำลังมา",
+edge: tc>=2?"ได้เปรียบมาก":tc>=1?"ได้เปรียบ":"ปกติ",
+ev:(tc*0.5).toFixed(2)+"%"
+};
 }
 
 /* value */
@@ -191,25 +203,22 @@ while(t>21&&a>0){t-=10;a--;}
 return t;
 }
 
-/* advice */
+/* play advice */
 function advice(){
 if(player.length<2||dealer===null) return "-";
 
 let t=value(player);
 let d=dealer;
 
-/* smart split/double */
 if(player.length==2 && player[0]==player[1]){
-let p=player[0];
-if(p=="A") return "🔥 SPLIT";
-if(p==8) return d<=9?"🔥 SPLIT":"⚠️ SPLIT";
+if(player[0]=="A") return "🔥 SPLIT";
+if(player[0]==8) return d<=9?"🔥 SPLIT":"⚠️ SPLIT";
 }
 
-if(player.length==2){
-if(t==11) return d<=8?"🔥 DOUBLE":"⚠️ HIT";
+if(player.length==2 && t==11){
+return d<=8?"🔥 DOUBLE":"⚠️ HIT";
 }
 
-/* basic */
 if(t>=17) return "🟢 STAND";
 if(t<=11) return "🔵 HIT";
 if(t>=12&&t<=16) return d<=6?"🟢 STAND":"🔵 HIT";
@@ -229,7 +238,8 @@ result.innerText=advice();
 
 let c=countText();
 countShow.innerText=`แนวโน้ม:${c.trend} | ได้เปรียบ:${c.edge} | กำไร:${c.ev}`;
-betAdvice.innerText="คำแนะนำชิพ: "+betAdviceFunc();
+
+betAdvice.innerText="คำแนะนำชิพ: "+adjustChip();
 }
 
 /* money */
@@ -242,13 +252,17 @@ function win(){
 if(locked) return;
 money+=chip;
 winStreak++;
+update();
 updateMoney();
 check();
 }
+
 function lose(){
 if(locked) return;
 money-=chip;
 winStreak=0;
+chip=baseChip;
+update();
 updateMoney();
 }
 
@@ -256,7 +270,7 @@ updateMoney();
 function check(){
 if(money>=target){
 locked=true;
-overlay.innerHTML="💰 ถึงเป้าแล้ว หยุด!";
+overlay.innerHTML="💰 ได้กำไรแล้ว หยุด!";
 overlay.style.display="flex";
 document.body.style.pointerEvents="none";
 }
