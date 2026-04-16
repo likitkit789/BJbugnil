@@ -3,273 +3,244 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BJBUGNIL PRO - NEW SYSTEM</title>
+<title>BJ SYSTEM STABLE</title>
 
 <style>
 body {margin:0;font-family:Arial;background:#0b3d2e;color:white;text-align:center;}
-h2 {font-size:18px;margin:6px;}
+h2 {margin:6px;}
 
-.topbar {display:flex;justify-content:center;gap:5px;padding:5px;}
-.topbar input {width:65px;padding:5px;border-radius:6px;border:none;text-align:center;font-weight:bold;}
+.topbar {display:flex;justify-content:center;gap:6px;padding:6px;}
+.topbar input {width:70px;padding:5px;border-radius:6px;border:none;text-align:center;font-weight:bold;}
 
 .grid {
-  display:grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap:6px;
-  padding:10px;
+ display:grid;
+ grid-template-columns:repeat(5,1fr);
+ gap:6px;
+ padding:10px;
 }
 
 .card {
-  height:45px;
-  font-size:18px;
-  font-weight:bold;
-  border-radius:8px;
-  border:none;
-  background:white;
-  color:black;
+ height:45px;
+ font-size:18px;
+ font-weight:bold;
+ border-radius:8px;
+ border:none;
+ background:#ffffff;
+ color:#000;
+ cursor:pointer;
 }
 
-.controls {display:flex;justify-content:center;gap:8px;margin-top:10px;}
-.win {background:#2ecc71;width:120px;height:55px;font-weight:bold;font-size:18px;cursor:pointer;}
-.lose {background:#e74c3c;width:120px;height:55px;font-weight:bold;font-size:18px;cursor:pointer;}
-.undo {background:#f39c12;width:75px;height:48px;font-weight:bold;cursor:pointer;}
-.reset {background:#7f8c8d;width:75px;height:48px;font-weight:bold;cursor:pointer;}
+.controls {display:flex;justify-content:center;gap:10px;margin-top:10px;}
 
-button {border:none;border-radius:8px;color:white;}
+.win {background:#2ecc71;width:120px;height:55px;}
+.lose {background:#e74c3c;width:120px;height:55px;}
+.undo {background:#f39c12;width:80px;height:45px;}
+.reset {background:#7f8c8d;width:80px;height:45px;}
+
+button {border:none;border-radius:8px;color:white;font-weight:bold;cursor:pointer;}
 button:active {opacity:0.7;}
 
-.big {font-size:22px;font-weight:bold;}
-.dealer {color:#ff4d4d;}
-.player {color:#00ffcc;}
-.score {color:#ffd700;}
+.money {color:#ffd700;margin-top:6px;}
+.bet {color:#00ffcc;margin-top:6px;}
 
-.result {margin-top:6px;font-size:16px;background:rgba(0,0,0,0.3);padding:5px;border-radius:5px;}
-.money {font-size:16px;color:#ffd700;margin:5px 0;}
-.count {font-size:13px;color:#ccc;}
-.bet {font-size:16px;color:#00ffcc;font-weight:bold;background:rgba(0,255,204,0.1);padding:5px;display:inline-block;border-radius:5px;margin-top:5px;}
-
-.overlay {
-position:fixed;top:0;left:0;width:100%;height:100%;
-background:rgba(0,0,0,0.9);color:white;display:none;
-justify-content:center;align-items:center;
-text-align:center;font-size:24px;z-index:9999;
+.popup {
+ position:fixed;
+ top:50%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ font-size:48px;
+ font-weight:bold;
+ color:#00ff00;
+ animation:blink .6s infinite;
+ z-index:9999;
+}
+@keyframes blink {
+ 50%{opacity:0;}
 }
 </style>
 </head>
 
 <body>
 
-<div id="overlay" class="overlay"></div>
-
-<h2>🔥 BJBUGNIL PRO - V2 🔥</h2>
+<h2>🔥 STABLE VERSION 🔥</h2>
 
 <div class="topbar">
-<input id="startMoney" type="number" value="1000" placeholder="ทุน">
-<input id="chipInput" type="number" value="50" placeholder="ชิพ">
-<input id="profitPercent" type="number" value="10" placeholder="กำไร %">
-<button onclick="setMoney()" style="background:#27ae60;padding:5px 15px;">เริ่ม</button>
+<input id="startMoney" type="number" value="1000">
+<input id="chipInput" type="number" value="50">
+<input id="profitPercent" type="number" value="10">
+<button onclick="setMoney()" style="background:#27ae60;padding:5px 10px;">เริ่ม</button>
 </div>
 
-<div class="big dealer">Dealer: <span id="dealerShow">-</span></div>
-<div class="big player">Player: <span id="playerShow">-</span></div>
-<div class="big score">แต้ม: <span id="scoreShow">0</span></div>
+<div>Dealer: <span id="dealerShow">-</span></div>
+<div>Player: <span id="playerShow">-</span></div>
+<div>แต้ม: <span id="scoreShow">0</span></div>
 
 <div id="cards" class="grid"></div>
 
-<div id="result" class="result">รอรับข้อมูล...</div>
-<div id="betAdvice" class="bet">ระบบเดินเงิน: ไม้ 1 (ปกติ)</div>
+<div class="bet" id="betAdvice"></div>
 
-<div id="moneyShow" class="money">💰 เงิน: 0 | เป้า: 0</div>
-<div id="countShow" class="count">แนวโน้ม:- | ได้เปรียบ:-</div>
+<div class="money">
+💰 เงิน: <span id="moneyShow">0</span> | 🎯 เป้า: <span id="targetShow">0</span>
+</div>
+<div>📉 ผลต่าง: <span id="lossShow">0</span></div>
 
 <div class="controls">
-<button class="win" onclick="win()">WIN ✅</button>
-<button class="lose" onclick="lose()">LOSE ❌</button>
+<button class="win" onclick="win()">WIN</button>
+<button class="lose" onclick="lose()">LOSE</button>
 </div>
 
 <div class="controls">
-<button class="undo" onclick="undo()">ย้อนกลับ</button>
-<button class="reset" onclick="resetRound()">ล้างกระดาน</button>
+<button class="undo" onclick="undo()">Undo</button>
+<button class="reset" onclick="resetRound()">Reset</button>
 </div>
 
 <script>
-const cards = ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10];
-let dealer = null, player = [], history = [];
-let runningCount = 0, decks = 2;
-let money = 0, target = 0;
-let chip = 50, baseChip = 50;
-let multiplier = 1; // ตัวคูณสำหรับระบบ Martingale
-let locked = false;
+// ---------- STATE ----------
+const cards = ["A",2,3,4,5,6,7,8,9,10];
 
-// สร้างปุ่มไพ่
+let dealer = null;
+let player = [];
+let history = [];
+
+let money = 0;
+let startMoneyVal = 0;
+let target = 0;
+
+let baseChip = 50;
+let chip = 50;
+
+let winStreak = 0;
+
+// ---------- INIT GRID ----------
 const grid = document.getElementById("cards");
-cards.forEach(c => {
-    let b = document.createElement("button");
-    b.innerText = c;
-    b.className = "card";
-    b.onclick = () => select(c);
-    grid.appendChild(b);
+cards.forEach(c=>{
+ let btn = document.createElement("button");
+ btn.innerText = c;
+ btn.className = "card";
+ btn.onclick = ()=>selectCard(c);
+ grid.appendChild(btn);
 });
 
-// ตั้งค่าเริ่มต้น
-function setMoney() {
-    money = Number(document.getElementById("startMoney").value);
-    baseChip = Number(document.getElementById("chipInput").value);
-    let pPercent = Number(document.getElementById("profitPercent").value);
-    
-    chip = baseChip;
-    multiplier = 1;
-    target = money + (money * pPercent / 100);
-    updateMoney();
-    update();
+// ---------- SET MONEY ----------
+function setMoney(){
+ startMoneyVal = Number(document.getElementById("startMoney").value);
+ money = startMoneyVal;
+
+ baseChip = Number(document.getElementById("chipInput").value);
+
+ let percent = Number(document.getElementById("profitPercent").value);
+ target = startMoneyVal + (startMoneyVal * percent / 100);
+
+ winStreak = 0;
+
+ updateUI();
 }
 
-// เลือกไพ่
-function select(card) {
-    if (locked) return;
-    if (dealer === null) {
-        dealer = card;
-        history.push({ type: "dealer", card });
-    } else {
-        player.push(card);
-        history.push({ type: "player", card });
-    }
-    updateCount(card);
-    update();
+// ---------- SELECT CARD ----------
+function selectCard(card){
+ if(dealer === null){
+  dealer = card;
+  history.push("dealer");
+ }else{
+  player.push(card);
+  history.push("player");
+ }
+ updateUI();
 }
 
-// ระบบนับไพ่
-function updateCount(c) {
-    if (c >= 2 && c <= 6) runningCount++;
-    if (c == 10 || c == "A") runningCount--;
+// ---------- UNDO ----------
+function undo(){
+ if(history.length === 0) return;
+
+ let last = history.pop();
+
+ if(last === "dealer") dealer = null;
+ else player.pop();
+
+ updateUI();
 }
 
-function reverseCount(c) {
-    if (c >= 2 && c <= 6) runningCount--;
-    if (c == 10 || c == "A") runningCount++;
+// ---------- RESET ROUND ----------
+function resetRound(){
+ dealer = null;
+ player = [];
+ updateUI();
 }
 
-function TC() { return runningCount / decks; }
+// ---------- VALUE ----------
+function getValue(hand){
+ let total = 0, aces = 0;
 
-// ย้อนกลับ
-function undo() {
-    if (history.length === 0 || locked) return;
-    let last = history.pop();
-    if (last.type === "dealer") dealer = null;
-    else player.pop();
-    reverseCount(last.card);
-    update();
+ hand.forEach(c=>{
+  if(c === "A"){aces++; total += 11;}
+  else total += c;
+ });
+
+ while(total > 21 && aces > 0){
+  total -= 10;
+  aces--;
+ }
+
+ return total;
 }
 
-/* 💰 ระบบเดินเงินใหม่: SMART MARTINGALE + TC SCALING */
-function adjustChip() {
-    let tc = TC();
-    let currentBase = baseChip;
-
-    // 1. ปรับตามความได้เปรียบ (TC)
-    if (tc >= 3) currentBase = baseChip * 3;
-    else if (tc >= 1.5) currentBase = baseChip * 2;
-    else if (tc < 0) currentBase = Math.max(baseChip / 2, 10); // ลดเงินถ้าเสียเปรียบ
-
-    // 2. คำนวณเงินเดิมพัน (ฐานเงินตามไพ่ x ตัวคูณไม้ทบ)
-    chip = Math.floor(currentBase * multiplier);
-
-    let status = (multiplier > 1) ? `⚠️ ไม้ทบ x${multiplier}` : "✅ ไม้ปกติ (ไม้ 1)";
-    let tcNote = (tc >= 1.5) ? "🔥 ไพ่เข้าทาง" : (tc < 0) ? "❄️ ไพ่เสียเปรียบ" : "⚖️ ปกติ";
-    
-    return `แนะนำ: ${chip} (${status} | ${tcNote})`;
+// ---------- BET SYSTEM ----------
+function calculateBet(){
+ chip = baseChip * Math.pow(2, winStreak);
 }
 
-function countText() {
-    let tc = TC();
-    return {
-        trend: runningCount > 0 ? "ไพ่เล็กออกเยอะ (ไพ่ใหญ่กำลังมา)" : "ไพ่ใหญ่เริ่มหมด",
-        edge: tc >= 1.5 ? "ได้เปรียบสูง" : tc >= 0.5 ? "ได้เปรียบ" : "เสียเปรียบ/ปกติ"
-    };
+// ---------- WIN ----------
+function win(){
+ calculateBet();
+ money += chip;
+
+ winStreak++;
+
+ if(money >= startMoneyVal){
+  winStreak = 0;
+ }
+
+ updateUI();
+ checkTarget();
+ resetRound();
 }
 
-function value(h) {
-    let t = 0, a = 0;
-    h.forEach(c => {
-        if (c == "A") { a++; t += 11; } else t += c;
-    });
-    while (t > 21 && a > 0) { t -= 10; a--; }
-    return t;
+// ---------- LOSE ----------
+function lose(){
+ calculateBet();
+ money -= chip;
+
+ winStreak = 0;
+
+ updateUI();
+ resetRound();
 }
 
-function advice() {
-    if (player.length < 2 || dealer === null) return "กรุณาใส่ไพ่...";
-    let t = value(player);
-    let d = dealer;
+// ---------- TARGET POPUP ----------
+function checkTarget(){
+ if(money >= target){
+  let popup = document.createElement("div");
+  popup.className = "popup";
+  popup.innerText = "+" + (money - startMoneyVal);
 
-    // Basic Strategy แบบย่อ
-    if (player.length == 2 && player[0] == player[1]) {
-        if (player[0] == "A" || player[0] == 8) return "🔥 แยกไพ่ (SPLIT)";
-    }
-    if (player.length == 2 && t == 11) return "🔥 เพิ่มเดิมพัน (DOUBLE)";
-    if (t >= 17) return "🟢 หยุด (STAND)";
-    if (t <= 11) return "🔵 จั่ว (HIT)";
-    if (t >= 12 && t <= 16) return d <= 6 ? "🟢 หยุด (STAND)" : "🔵 จั่ว (HIT)";
-    return "🔵 จั่ว (HIT)";
+  document.body.appendChild(popup);
+ }
 }
 
-function update() {
-    let t = value(player);
-    document.getElementById("dealerShow").innerText = dealer || "-";
-    document.getElementById("playerShow").innerText = player.join(",");
-    document.getElementById("scoreShow").innerText = t;
-    document.getElementById("result").innerText = "กลยุทธ์: " + advice();
-    
-    let c = countText();
-    document.getElementById("countShow").innerText = `แนวโน้ม: ${c.trend} | สถานะ: ${c.edge}`;
-    document.getElementById("betAdvice").innerText = "💰 " + adjustChip();
-}
+// ---------- UPDATE UI ----------
+function updateUI(){
+ calculateBet();
 
-function updateMoney() {
-    document.getElementById("moneyShow").innerText = `💰 เงิน: ${money.toLocaleString()} | เป้า: ${target.toLocaleString()}`;
-}
+ document.getElementById("dealerShow").innerText = dealer || "-";
+ document.getElementById("playerShow").innerText = player.join(",");
+ document.getElementById("scoreShow").innerText = getValue(player);
 
-// ปุ่ม WIN
-function win() {
-    if (locked) return;
-    money += chip;
-    multiplier = 1; // ชนะแล้วกลับไปไม้ 1
-    updateMoney();
-    checkTarget();
-    resetRound();
-}
+ document.getElementById("moneyShow").innerText = money;
+ document.getElementById("targetShow").innerText = target;
+ document.getElementById("lossShow").innerText = money - startMoneyVal;
 
-// ปุ่ม LOSE (ระบบทบเงิน)
-function lose() {
-    if (locked) return;
-    money -= chip;
-    // ทบทวีคูณ 1 > 2 > 4 > 8 (สูงสุด 4 ไม้เพื่อความปลอดภัย)
-    if (multiplier < 8) {
-        multiplier *= 2;
-    } else {
-        multiplier = 1; // แพ้เกิน 4 ไม้ให้ถอยมาตั้งหลัก
-    }
-    updateMoney();
-    update(); // อัปเดตชิพใหม่ทันทีหลังแพ้
-    resetRound();
-}
-
-function checkTarget() {
-    if (money >= target) {
-        locked = true;
-        let ov = document.getElementById("overlay");
-        ov.innerHTML = "💰 บรรลุเป้าหมายกำไรแล้ว!<br>ควรหยุดพักและถอนเงิน";
-        ov.style.display = "flex";
-    }
-}
-
-function resetRound() {
-    if (locked) return;
-    dealer = null;
-    player = [];
-    history = [];
-    // ไม่รีเซ็ต runningCount เพื่อให้นับต่อเนื่องทั้งขอน
-    update();
+ document.getElementById("betAdvice").innerText =
+  "BET: " + chip + " | STREAK: " + winStreak;
 }
 </script>
 
