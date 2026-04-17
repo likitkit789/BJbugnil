@@ -3,246 +3,205 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BJ SYSTEM STABLE</title>
-
+<title>BJBUGNIL PRO - FIXED</title>
 <style>
+/* CSS คงเดิมตามที่คุณชอบ */
 body {margin:0;font-family:Arial;background:#0b3d2e;color:white;text-align:center;}
-h2 {margin:6px;}
-
-.topbar {display:flex;justify-content:center;gap:6px;padding:6px;}
-.topbar input {width:70px;padding:5px;border-radius:6px;border:none;text-align:center;font-weight:bold;}
-
-.grid {
- display:grid;
- grid-template-columns:repeat(5,1fr);
- gap:6px;
- padding:10px;
-}
-
-.card {
- height:45px;
- font-size:18px;
- font-weight:bold;
- border-radius:8px;
- border:none;
- background:#ffffff;
- color:#000;
- cursor:pointer;
-}
-
-.controls {display:flex;justify-content:center;gap:10px;margin-top:10px;}
-
-.win {background:#2ecc71;width:120px;height:55px;}
-.lose {background:#e74c3c;width:120px;height:55px;}
-.undo {background:#f39c12;width:80px;height:45px;}
-.reset {background:#7f8c8d;width:80px;height:45px;}
-
-button {border:none;border-radius:8px;color:white;font-weight:bold;cursor:pointer;}
-button:active {opacity:0.7;}
-
-.money {color:#ffd700;margin-top:6px;}
-.bet {color:#00ffcc;margin-top:6px;}
-
-.popup {
- position:fixed;
- top:50%;
- left:50%;
- transform:translate(-50%,-50%);
- font-size:48px;
- font-weight:bold;
- color:#00ff00;
- animation:blink .6s infinite;
- z-index:9999;
-}
-@keyframes blink {
- 50%{opacity:0;}
-}
+h2 {font-size:18px;margin:6px;}
+.topbar {display:flex;justify-content:center;gap:5px;padding:5px;}
+.topbar input {width:65px;padding:5px;border-radius:6px;border:none;text-align:center;font-weight:bold;}
+.grid {display:grid;grid-template-columns: repeat(5, 1fr);gap:6px;padding:10px;}
+.card {height:45px;font-size:18px;font-weight:bold;border-radius:8px;border:none;background:white;color:black;}
+.controls {display:flex;justify-content:center;gap:8px;margin-top:10px;}
+.win {background:#2ecc71;width:100px;height:50px;font-weight:bold;cursor:pointer;}
+.lose {background:#e74c3c;width:100px;height:50px;font-weight:bold;cursor:pointer;}
+.next {background:#3498db;width:120px;height:50px;font-weight:bold;cursor:pointer;}
+.undo {background:#f39c12;width:75px;height:48px;font-weight:bold;}
+.reset {background:#7f8c8d;width:75px;height:48px;font-weight:bold;}
+button {border:none;border-radius:8px;color:white;}
+.big {font-size:22px;font-weight:bold;}
+.dealer {color:#ff4d4d;}
+.player {color:#00ffcc;}
+.score {color:#ffd700;}
+.result {margin-top:6px;font-size:18px;background:rgba(255,255,255,0.1);padding:10px;border-radius:5px;min-height:25px;}
+.money {font-size:16px;color:#ffd700;margin:5px 0;}
+.bet {font-size:16px;color:#00ffcc;font-weight:bold;}
+.overlay {position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);color:white;display:none;justify-content:center;align-items:center;text-align:center;font-size:24px;z-index:9999;}
 </style>
 </head>
-
 <body>
 
-<h2>🔥 STABLE VERSION 🔥</h2>
+<div id="overlay" class="overlay"></div>
+<h2>🔥 BJBUGNIL PRO - V2.1 🔥</h2>
 
 <div class="topbar">
 <input id="startMoney" type="number" value="1000">
 <input id="chipInput" type="number" value="50">
 <input id="profitPercent" type="number" value="10">
-<button onclick="setMoney()" style="background:#27ae60;padding:5px 10px;">เริ่ม</button>
+<button onclick="setMoney()" style="background:#27ae60;">ตกลง</button>
 </div>
 
-<div>Dealer: <span id="dealerShow">-</span></div>
-<div>Player: <span id="playerShow">-</span></div>
-<div>แต้ม: <span id="scoreShow">0</span></div>
+<div class="big dealer">Dealer: <span id="dealerShow">-</span></div>
+<div class="big player">Player: <span id="playerShow">-</span></div>
+<div class="big score">แต้ม: <span id="scoreShow">0</span></div>
 
 <div id="cards" class="grid"></div>
 
-<div class="bet" id="betAdvice"></div>
-
-<div class="money">
-💰 เงิน: <span id="moneyShow">0</span> | 🎯 เป้า: <span id="targetShow">0</span>
-</div>
-<div>📉 ผลต่าง: <span id="lossShow">0</span></div>
+<div id="result" class="result">รอรับข้อมูล...</div>
+<div id="betAdvice" class="bet">ชิพ: -</div>
+<div id="moneyShow" class="money">เงิน: 0 | เป้า: 0</div>
 
 <div class="controls">
-<button class="win" onclick="win()">WIN</button>
-<button class="lose" onclick="lose()">LOSE</button>
+<button class="win" onclick="win()">ชนะ (WIN)</button>
+<button class="lose" onclick="lose()">แพ้ (LOSE)</button>
 </div>
 
 <div class="controls">
-<button class="undo" onclick="undo()">Undo</button>
-<button class="reset" onclick="resetRound()">Reset</button>
+<button class="next" onclick="resetRound()">เริ่มรอบใหม่</button>
+<button class="undo" onclick="undo()">ย้อนกลับ</button>
 </div>
 
 <script>
-// ---------- STATE ----------
-const cards = ["A",2,3,4,5,6,7,8,9,10];
+const cards = ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10];
+let dealer = null, player = [], history = [];
+let runningCount = 0, decks = 2;
+let money = 0, target = 0;
+let chip = 0, baseChip = 50, multiplier = 1, locked = false;
 
-let dealer = null;
-let player = [];
-let history = [];
-
-let money = 0;
-let startMoneyVal = 0;
-let target = 0;
-
-let baseChip = 50;
-let chip = 50;
-
-let winStreak = 0;
-
-// ---------- INIT GRID ----------
 const grid = document.getElementById("cards");
-cards.forEach(c=>{
- let btn = document.createElement("button");
- btn.innerText = c;
- btn.className = "card";
- btn.onclick = ()=>selectCard(c);
- grid.appendChild(btn);
+cards.forEach(c => {
+    let b = document.createElement("button");
+    b.innerText = c;
+    b.className = "card";
+    b.onclick = () => select(c);
+    grid.appendChild(b);
 });
 
-// ---------- SET MONEY ----------
-function setMoney(){
- startMoneyVal = Number(document.getElementById("startMoney").value);
- money = startMoneyVal;
-
- baseChip = Number(document.getElementById("chipInput").value);
-
- let percent = Number(document.getElementById("profitPercent").value);
- target = startMoneyVal + (startMoneyVal * percent / 100);
-
- winStreak = 0;
-
- updateUI();
+function setMoney() {
+    money = Number(document.getElementById("startMoney").value);
+    baseChip = Number(document.getElementById("chipInput").value);
+    target = money + (money * Number(document.getElementById("profitPercent").value) / 100);
+    multiplier = 1;
+    updateMoney();
+    update();
 }
 
-// ---------- SELECT CARD ----------
-function selectCard(card){
- if(dealer === null){
-  dealer = card;
-  history.push("dealer");
- }else{
-  player.push(card);
-  history.push("player");
- }
- updateUI();
+function select(card) {
+    if (locked) return;
+    if (dealer === null) {
+        dealer = card;
+        history.push({ type: "dealer", card });
+    } else {
+        player.push(card);
+        history.push({ type: "player", card });
+    }
+    updateCount(card);
+    update();
 }
 
-// ---------- UNDO ----------
-function undo(){
- if(history.length === 0) return;
-
- let last = history.pop();
-
- if(last === "dealer") dealer = null;
- else player.pop();
-
- updateUI();
+function updateCount(c) {
+    if (c >= 2 && c <= 6) runningCount++;
+    if (c == 10 || c == "A") runningCount--;
 }
 
-// ---------- RESET ROUND ----------
-function resetRound(){
- dealer = null;
- player = [];
- updateUI();
+function reverseCount(c) {
+    if (c >= 2 && c <= 6) runningCount--;
+    if (c == 10 || c == "A") runningCount++;
 }
 
-// ---------- VALUE ----------
-function getValue(hand){
- let total = 0, aces = 0;
+function TC() { return runningCount / decks; }
 
- hand.forEach(c=>{
-  if(c === "A"){aces++; total += 11;}
-  else total += c;
- });
-
- while(total > 21 && aces > 0){
-  total -= 10;
-  aces--;
- }
-
- return total;
+function undo() {
+    if (history.length === 0 || locked) return;
+    let last = history.pop();
+    if (last.type === "dealer") dealer = null;
+    else player.pop();
+    reverseCount(last.card);
+    update();
 }
 
-// ---------- BET SYSTEM ----------
-function calculateBet(){
- chip = baseChip * Math.pow(2, winStreak);
+function adjustChip() {
+    let tc = TC();
+    let currentBase = baseChip;
+    if (tc >= 3) currentBase = baseChip * 3;
+    else if (tc >= 1.5) currentBase = baseChip * 2;
+    else if (tc < 0) currentBase = Math.max(baseChip / 2, 10);
+    
+    chip = Math.floor(currentBase * multiplier);
+    return `เดิมพันรอบนี้: ${chip} (ไม้ ${multiplier})`;
 }
 
-// ---------- WIN ----------
-function win(){
- calculateBet();
- money += chip;
-
- winStreak++;
-
- if(money >= startMoneyVal){
-  winStreak = 0;
- }
-
- updateUI();
- checkTarget();
- resetRound();
+function value(h) {
+    let t = 0, a = 0;
+    h.forEach(c => {
+        if (c == "A") { a++; t += 11; } else t += c;
+    });
+    while (t > 21 && a > 0) { t -= 10; a--; }
+    return t;
 }
 
-// ---------- LOSE ----------
-function lose(){
- calculateBet();
- money -= chip;
+function advice() {
+    if (player.length < 2 || dealer === null) return "รอไพ่ใบที่ 2...";
+    let t = value(player);
+    let d = dealer;
 
- winStreak = 0;
-
- updateUI();
- resetRound();
+    if (t > 21) return "❌ เกิน 21 แต้ม (Bust)";
+    if (player.length == 2 && player[0] == player[1]) {
+        if (player[0] == "A" || player[0] == 8) return "🔥 แยกไพ่ (SPLIT)";
+    }
+    if (player.length == 2 && t == 11) return "🔥 ดับเบิ้ล (DOUBLE)";
+    if (t >= 17) return "🟢 หยุด (STAND)";
+    if (t <= 11) return "🔵 จั่ว (HIT)";
+    if (t >= 12 && t <= 16) return d <= 6 ? "🟢 หยุด (STAND)" : "🔵 จั่ว (HIT)";
+    return "🔵 จั่ว (HIT)";
 }
 
-// ---------- TARGET POPUP ----------
-function checkTarget(){
- if(money >= target){
-  let popup = document.createElement("div");
-  popup.className = "popup";
-  popup.innerText = "+" + (money - startMoneyVal);
-
-  document.body.appendChild(popup);
- }
+function update() {
+    let t = value(player);
+    document.getElementById("dealerShow").innerText = dealer || "-";
+    document.getElementById("playerShow").innerText = player.join(", ");
+    document.getElementById("scoreShow").innerText = t;
+    document.getElementById("result").innerText = "คำแนะนำ: " + advice();
+    document.getElementById("betAdvice").innerText = adjustChip();
 }
 
-// ---------- UPDATE UI ----------
-function updateUI(){
- calculateBet();
+function updateMoney() {
+    document.getElementById("moneyShow").innerText = `💰 เงิน: ${money.toLocaleString()} | เป้า: ${target.toLocaleString()}`;
+}
 
- document.getElementById("dealerShow").innerText = dealer || "-";
- document.getElementById("playerShow").innerText = player.join(",");
- document.getElementById("scoreShow").innerText = getValue(player);
+function win() {
+    if (locked || player.length < 1) return;
+    money += chip;
+    multiplier = 1; 
+    updateMoney();
+    checkTarget();
+    alert("บันทึกผลชนะแล้ว! กด 'เริ่มรอบใหม่' เพื่อเล่นต่อ");
+}
 
- document.getElementById("moneyShow").innerText = money;
- document.getElementById("targetShow").innerText = target;
- document.getElementById("lossShow").innerText = money - startMoneyVal;
+function lose() {
+    if (locked || player.length < 1) return;
+    money -= chip;
+    if (multiplier < 8) multiplier *= 2; else multiplier = 1;
+    updateMoney();
+    update();
+    alert("บันทึกผลแพ้แล้ว! (ไม้ถัดไปทบเงิน) กด 'เริ่มรอบใหม่' เพื่อเล่นต่อ");
+}
 
- document.getElementById("betAdvice").innerText =
-  "BET: " + chip + " | STREAK: " + winStreak;
+function checkTarget() {
+    if (money >= target) {
+        locked = true;
+        document.getElementById("overlay").innerHTML = "💰 บรรลุเป้าหมายกำไร!<br>ควรหยุดพัก";
+        document.getElementById("overlay").style.display = "flex";
+    }
+}
+
+function resetRound() {
+    if (locked) return;
+    dealer = null;
+    player = [];
+    history = [];
+    update();
 }
 </script>
-
 </body>
 </html>
